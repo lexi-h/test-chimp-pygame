@@ -21,7 +21,7 @@ def load_image(name, colorkey=None, scale=1):
 
     size = image.get_size()
     size = (size[0] * scale, size[1] * scale)
-    image = pygame.transform.scale(image.size)
+    image = pygame.transform.scale(image, size)
 
     image = image.convert()
     if colorkey is not None:
@@ -118,3 +118,66 @@ class Chimp(pygame.sprite.Sprite):
         if not self.dizzy:
             self.dizzy = True 
             self.original = self.image
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((1280, 480), pygame.SCALED)
+    pygame.display.set_caption("Monkey Fever")
+    pygame.mouse.set_visible(False)
+
+    background = pygame.Surface(screen.get_size())
+    background = background.convert()
+    background.fill((170, 238, 187))
+
+    if pygame.font:
+        font = pygame.font.Font(None, 64)
+        text = font.render("Pummel The Chimp, And Win $$$", True, (10,10,10))
+        textpos = text.get_rect(centerx=background.get_width() / 2, y=10)
+        background.blit(text, textpos)
+
+
+    screen.blit(background, (0,0))
+    pygame.display.flip()
+
+    whiff_sound = load_sound("whiff.wav")
+    punch_sound = load_sound("punch.wav")
+    chimp = Chimp()
+    fist = Fist()
+    allsprites = pygame.sprite.RenderPlain((fist, chimp))
+    clock = pygame.time.Clock()
+
+    going = True 
+    while going:
+        clock.tick(60)
+
+        # GET INPUT AND HANDLE EVENTS
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                going = False
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                going = False
+
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if fist.punch(chimp):
+                    punch_sound.play() #punch
+                    chimp.punched()
+                else:
+                    whiff_sound.play() #miss
+            elif event.type == pygame.MOUSEBUTTONUP:
+                fist.unpunch()
+
+        # DRAW
+        allsprites.update()
+        screen.blit(background, (0,0))
+        allsprites.draw(screen)
+        pygame.display.flip()
+
+    # done with main loop
+
+    pygame.quit()
+
+    
+
+
+main()
